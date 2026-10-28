@@ -1,0 +1,22 @@
+{
+  "filename": "CLOSER_Instalador_Offline_v0.6.2.exe",
+  "sha256": "40e7368fda957e9e86d85ea2b54034bd640a44fd0cce7438d5bc5c6a835cab72",
+  "size": 122869912,
+  "parts": {
+    "CLOSER_SETUP_v062_01.part": {"id":"1hFpQTdW_wC6iY8ZBPoiU4n4Ycx_JIPdQ","sha256":"725bb3c334eb8937238cca5306866093537cd32148adcf4646e55e8c7d889639","size":8388608},
+    "CLOSER_SETUP_v062_02.part": {"id":"1ZaBKJqHH1dOcPWUuuRQUfjBCPrF3PyY7","sha256":"6104516abd7dbd4bdd04a61c2abb489671d95cec2e8d8b7bc732a2a6f75f8953","size":8388608},
+    "CLOSER_SETUP_v062_03.part": {"id":"1e4z68ElLNV8N9KqZMCWc9I-MYnh7VuWN","sha256":"9dda308618926db0787ebd96b30d5a0a361f2d00b28483f79c85984d6cbc0afe","size":8388608},
+    "CLOSER_SETUP_v062_04.part": {"id":"1CdOVkkGR4YjT_Wo8IVd1vogl5njYUsZS","sha256":"7cd71f8b28c305d15c42996ed31cb2c2fe9890e462618de5bbc205ed05b56b85","size":8388608},
+    "CLOSER_SETUP_v062_05.part": {"id":"1XRklT4BAEk_Xju2OpzpI_Kw44_Mcn5vy","sha256":"3d230e5bf49722907eba8caf96c4cde549d7859542f8cd4b4b85756280a56ac4","size":8388608},
+    "CLOSER_SETUP_v062_06.part": {"id":"1wElJq0UzWhcKNBI0I7hBqg3YnJlIPwS6","sha256":"fb74b2e193ea1aba3925669a5a0330b83a48facf5726a843af568fb2a52324b2","size":8388608},
+    "CLOSER_SETUP_v062_07.part": {"id":"1RgcL4riYuzYphWcsM24CS4cNIM1lNjlR","sha256":"a8e0657756f4773ee5b45518c65e9d49bfdab571d0ab7ac17f037d2fe0bab319","size":8388608},
+    "CLOSER_SETUP_v062_08.part": {"id":"1cch6swWU6VNF0lluyjYJtTbVsrGv3kP_","sha256":"d14676469227194daa4d63f37adb0d53a0c7bfa1a3cfddcab200cf74f2e902a2","size":8388608},
+    "CLOSER_SETUP_v062_09.part": {"id":"1iPvJ9jekwffH1qzMVigG4f74iXVP16Xz","sha256":"7fa51f1c991b194611ef2eeae821e6635e9e7afdb92ee4e726db27093a81d86a","size":8388608},
+    "CLOSER_SETUP_v062_10.part": {"id":"1xwAuTlQiE-aqFEkG4tonsBERuUb6MBZy","sha256":"976d2ab32c8d342d8ca2fa9212303b9ed8ade5965e9617368c0ae0d5683d65fc","size":8388608},
+    "CLOSER_SETUP_v062_11.part": {"id":"1CVI2LazyJJ53WF1ICj73QcZJ03EGhW-5","sha256":"8ba0b16eda362c647088063f0dcade51853cf26daa74810fde800ccdbac67877","size":8388608},
+    "CLOSER_SETUP_v062_12.part": {"id":"1vGtj6yekZfYyo8L4TB92YFJdrlX7pphl","sha256":"0f472affc5098c48ff8d2e0317a78070bf388a670eff86f5926f9d050d195de3","size":8388608},
+    "CLOSER_SETUP_v062_13.part": {"id":"1TgDtwr5MKr8sYb4bfqsbERQH69jL9qgG","sha256":"424c9022d9e1dfeeadbcf43413063948a0523ef84148356d4171b613de43b19f","size":8388608},
+    "CLOSER_SETUP_v062_14.part": {"id":"1fExTkxctR70mgqjjiRvkgwYl6C-Z9WiV","sha256":"9a616b717f40b93368acb2f9bb37ef8f1ca70cdaf4af3ab6076cdf17d002f44a","size":8388608},
+    "CLOSER_SETUP_v062_15.part": {"id":"1c8jNHFuYME0rlRc1xSGASyoCddtjhJTH","sha256":"5220679435df3aaa95e6335b07aeaefdccb6a559511f863d0b26bee5dba76bb8","size":5429400}
+  }
+}
