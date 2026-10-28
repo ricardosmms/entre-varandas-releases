@@ -1,0 +1,47 @@
+name: CLOSER 0.0.1 - Nova Fundacao Windows
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/closer-nova-001.yml'
+permissions:
+  contents: write
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Baixar e verificar o código-fonte
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check "gdown>=5,<6"
+          gdown --id 1HkbOLUs79nUYR3IWaoXglhSGuhWzm5y7 -O closer_source.zip
+          $actual = (Get-FileHash -Path closer_source.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne "b72a6058286590cdb8be321047a4d605ed0089245b5ea06eb97d820360a0807b") { throw "Hash incorreto" }
+          Expand-Archive -Path closer_source.zip -DestinationPath source -Force
+      - name: Instalar dependências
+        working-directory: source/CLOSER_v0.0.1_SOURCE
+        run: npm install --no-audit --no-fund
+      - name: Testar motor narrativo
+        working-directory: source/CLOSER_v0.0.1_SOURCE
+        run: npm test
+      - name: Gerar instalador Windows
+        working-directory: source/CLOSER_v0.0.1_SOURCE
+        run: npm run package:win
+      - name: Publicar release de teste
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $installer = "source/CLOSER_v0.0.1_SOURCE/dist/CLOSER_Setup_v0.0.1.exe"
+          if (!(Test-Path $installer)) { throw "Instalador nao encontrado" }
+          gh release view v0.0.1 *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload v0.0.1 $installer --clobber
+          } else {
+            gh release create v0.0.1 $installer --prerelease --title "CLOSER v0.0.1 - Nova Fundacao" --notes "Nova fundacao: menu, elevador, corredor vazio, Bruna no primeiro encontro, seis sprites, dez cenarios provisórios e saves separados. Interacoes demonstrativas, sem IA generativa."
+          }
