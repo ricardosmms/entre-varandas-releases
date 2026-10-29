@@ -1,6 +1,11 @@
-name: CLOSER v0.0.4
+name: CLOSER 0.0.4 - Trilha musical e preparacao de voz
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/closer-nova-004.yml'
+      - 'release/build-004-trigger.txt'
 permissions:
   contents: write
 jobs:
@@ -8,3 +13,40 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Baixar fonte
+        shell: pwsh
+        run: |
+          python -m pip install "gdown>=5,<6"
+          gdown --id 1scbGIjJoli_3be43-cQIn17EIH47S4Pf -O source.zip
+          if ((Get-FileHash source.zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne "df3db137dd532e36d3f6b8728d2bc552a31d34d9b6a5aa2ea34a47872d3252b") { throw "SHA256 incorreto" }
+          Expand-Archive source.zip -DestinationPath source
+      - name: Adicionar trilha original recortada
+        shell: pwsh
+        run: |
+          gdown --id 1gmFWza0zKBpIeeepZQO1LeUspACnqols -O source/CLOSER_v0.0.4_SOURCE/assets/audio/closer_menu_theme.ogg
+          if ((Get-FileHash source/CLOSER_v0.0.4_SOURCE/assets/audio/closer_menu_theme.ogg -Algorithm SHA256).Hash.ToLowerInvariant() -ne "7d3955b7b57166ebe29172bbcfdf5fe9c6f089f68bb83714e0a37d2f70e31579") { throw "Trilha não passou na verificação SHA256" }
+      - name: Instalar
+        working-directory: source/CLOSER_v0.0.4_SOURCE
+        run: npm install --no-audit --no-fund
+      - name: Testar
+        working-directory: source/CLOSER_v0.0.4_SOURCE
+        run: npm test
+      - name: Compilar
+        working-directory: source/CLOSER_v0.0.4_SOURCE
+        run: npm run package:win
+      - name: Publicar
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $installer = "source/CLOSER_v0.0.4_SOURCE/dist/CLOSER_Setup_v0.0.4.exe"
+          if (!(Test-Path $installer)) { throw "Instalador ausente" }
+          gh release view v0.0.4 *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload v0.0.4 $installer --clobber
+          } else {
+            gh release create v0.0.4 $installer --prerelease --title "CLOSER v0.0.4 - Trilha musical no menu" --notes "Nova trilha de menu 00:00–03:17 em loop, seleção de música alternativa, eventos de voz da Bruna preparados (gravações ainda não incluídas). Prévia para testes; verificar autorização da música antes de distribuição ampla."
+          }
