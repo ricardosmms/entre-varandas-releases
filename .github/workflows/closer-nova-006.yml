@@ -23,6 +23,9 @@ jobs:
           gdown --id 1lGcrYl-GMycKhKVx2-3UhtvjzUEM6V9N -O source.zip
           if ((Get-FileHash source.zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne "f8db164ed18c498d7bd99bd697e4ad1563cb429f0d33af9db91775a0055f7a6b") { throw "SHA256 incorreto" }
           Expand-Archive source.zip -DestinationPath source
+      - name: Instalar FFmpeg gratuito para edição dos efeitos
+        shell: pwsh
+        run: choco install ffmpeg --yes --no-progress
       - name: Incorporar foley real de domínio público
         shell: pwsh
         working-directory: source/CLOSER_v0.0.6_SOURCE
