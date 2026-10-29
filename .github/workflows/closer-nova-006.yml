@@ -1,6 +1,11 @@
-name: CLOSER v0.0.6
+name: CLOSER 0.0.6 - Relogio narrativo e sons gratuitos
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/closer-nova-006.yml'
+      - 'release/build-006-trigger.txt'
 permissions:
   contents: write
 jobs:
@@ -8,3 +13,39 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Baixar fonte
+        shell: pwsh
+        run: |
+          python -m pip install "gdown>=5,<6"
+          gdown --id 1lGcrYl-GMycKhKVx2-3UhtvjzUEM6V9N -O source.zip
+          if ((Get-FileHash source.zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne "f8db164ed18c498d7bd99bd697e4ad1563cb429f0d33af9db91775a0055f7a6b") { throw "SHA256 incorreto" }
+          Expand-Archive source.zip -DestinationPath source
+      - name: Incorporar foley real de domínio público
+        shell: pwsh
+        working-directory: source/CLOSER_v0.0.6_SOURCE
+        run: ./tools/install_free_audio.ps1
+      - name: Instalar
+        working-directory: source/CLOSER_v0.0.6_SOURCE
+        run: npm install --no-audit --no-fund
+      - name: Testar
+        working-directory: source/CLOSER_v0.0.6_SOURCE
+        run: npm test
+      - name: Compilar
+        working-directory: source/CLOSER_v0.0.6_SOURCE
+        run: npm run package:win
+      - name: Publicar
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $installer = "source/CLOSER_v0.0.6_SOURCE/dist/CLOSER_Setup_v0.0.6.exe"
+          if (!(Test-Path $installer)) { throw "Instalador ausente" }
+          gh release view v0.0.6 *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload v0.0.6 $installer --clobber
+          } else {
+            gh release create v0.0.6 $installer --prerelease --title "CLOSER v0.0.6 - Tempo narrativo e foley livre" --notes "Tempo narrativo com alarmes no celular, escritório com expediente 09h-18h, sono e consequências de atraso; três variantes de iluminação; novo cenário de escritório; gravações de domínio público de elevador, porta e teclado verificadas e editadas durante a compilação; compatível com saves anteriores. Prévia de testes."
+          }
