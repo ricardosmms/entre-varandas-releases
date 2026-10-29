@@ -1,6 +1,10 @@
-name: CLOSER v0.0.3
+name: CLOSER 0.0.3 - Corredor e menu
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/closer-nova-002.yml'
 permissions:
   contents: write
 jobs:
@@ -8,3 +12,35 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Baixar fonte
+        shell: pwsh
+        run: |
+          python -m pip install "gdown>=5,<6"
+          gdown --id 1Qci9zJJcdjuF78ed2mvP1T7TSVH-rg_Z -O source.zip
+          if ((Get-FileHash source.zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne "d654270144ef0c1327dae2f09bbdd0dcb6468334f5f42ba8ad7384775451cdd6") { throw "SHA256 incorreto" }
+          Expand-Archive source.zip -DestinationPath source
+      - name: Instalar
+        working-directory: source/CLOSER_v0.0.3_SOURCE
+        run: npm install --no-audit --no-fund
+      - name: Testar
+        working-directory: source/CLOSER_v0.0.3_SOURCE
+        run: npm test
+      - name: Compilar
+        working-directory: source/CLOSER_v0.0.3_SOURCE
+        run: npm run package:win
+      - name: Publicar
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $installer = "source/CLOSER_v0.0.3_SOURCE/dist/CLOSER_Setup_v0.0.3.exe"
+          if (!(Test-Path $installer)) { throw "Instalador ausente" }
+          gh release view v0.0.3 *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload v0.0.3 $installer --clobber
+          } else {
+            gh release create v0.0.3 $installer --prerelease --title "CLOSER v0.0.3 - Menu animado e corredor costeiro" --notes "Corredor aprovado; fundo do menu em vídeo loop; somente título CLOSER; sons de elevador novos; opção de música local. Música de terceiros não distribuída."
+          }
