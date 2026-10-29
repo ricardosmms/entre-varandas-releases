@@ -1,0 +1,54 @@
+name: CLOSER 0.0.8 - Reintegracao experimental do ChatGPT
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/closer-nova-008.yml'
+      - 'release/build-008-trigger.txt'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Baixar fonte
+        shell: pwsh
+        run: |
+          python -m pip install "gdown>=5,<6"
+          gdown --id 1CyhtZl-lSrDqiUuENIfj4qsqfquh7-Sr -O source.zip
+          if ((Get-FileHash source.zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne "18cd220b1f7def27cc549864b075b2889c24e6a03c64cc9cb7ee4820a18c9076") { throw "SHA256 incorreto" }
+          Expand-Archive source.zip -DestinationPath source
+      - name: Instalar FFmpeg gratuito para edição dos efeitos
+        shell: pwsh
+        run: choco install ffmpeg --yes --no-progress
+      - name: Incorporar foley real de domínio público
+        shell: pwsh
+        working-directory: source/CLOSER_v0.0.8_SOURCE
+        run: ./tools/install_free_audio.ps1
+      - name: Instalar
+        working-directory: source/CLOSER_v0.0.8_SOURCE
+        run: npm install --no-audit --no-fund
+      - name: Testar
+        working-directory: source/CLOSER_v0.0.8_SOURCE
+        run: npm test
+      - name: Compilar
+        working-directory: source/CLOSER_v0.0.8_SOURCE
+        run: npm run package:win
+      - name: Publicar
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $installer = "source/CLOSER_v0.0.8_SOURCE/dist/CLOSER_Setup_v0.0.8.exe"
+          if (!(Test-Path $installer)) { throw "Instalador ausente" }
+          gh release view v0.0.8 *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload v0.0.8 $installer --clobber
+          } else {
+            gh release create v0.0.8 $installer --prerelease --title "CLOSER v0.0.8 - Reintegracao experimental ChatGPT" --notes "Prévia experimental: login do jogador via Sign in with ChatGPT, catálogo de modelos, teste de geração, respostas contextuais online e persistência da narrativa; 56 testes automatizados. Uso do plano depende de autorização e elegibilidade. Uma falha de rede não modifica a campanha. A v0.0.7 permanece disponível."
+          }
