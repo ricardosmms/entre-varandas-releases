@@ -1,0 +1,54 @@
+name: CLOSER 0.0.10 - Login Chrome e cancelamento sem travar
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/closer-nova-010.yml'
+      - 'release/build-010-trigger.txt'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Baixar fonte
+        shell: pwsh
+        run: |
+          python -m pip install "gdown>=5,<6"
+          gdown --id 1wN_-rMnb93F5AxQsXjgWGvx8ngn3sYPc -O source.zip
+          if ((Get-FileHash source.zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne "ca041c1a02c308dee360f1d937d56bc944d91aae87f9cca1fe3ce2853c3d04e6") { throw "SHA256 incorreto" }
+          Expand-Archive source.zip -DestinationPath source
+      - name: Instalar FFmpeg gratuito para edição dos efeitos
+        shell: pwsh
+        run: choco install ffmpeg --yes --no-progress
+      - name: Incorporar foley real de domínio público
+        shell: pwsh
+        working-directory: source/CLOSER_v0.0.10_SOURCE
+        run: ./tools/install_free_audio.ps1
+      - name: Instalar
+        working-directory: source/CLOSER_v0.0.10_SOURCE
+        run: npm install --no-audit --no-fund
+      - name: Testar
+        working-directory: source/CLOSER_v0.0.10_SOURCE
+        run: npm test
+      - name: Compilar
+        working-directory: source/CLOSER_v0.0.10_SOURCE
+        run: npm run package:win
+      - name: Publicar
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $installer = "source/CLOSER_v0.0.10_SOURCE/dist/CLOSER_Setup_v0.0.10.exe"
+          if (!(Test-Path $installer)) { throw "Instalador ausente" }
+          gh release view v0.0.10 *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload v0.0.10 $installer --clobber
+          } else {
+            gh release create v0.0.10 $installer --prerelease --title "CLOSER v0.0.10 - Login Chrome e bloqueio de campanha" --notes "Hotfix: autenticação via Google Chrome ou navegador padrão, link manual para Chrome, cancelamento e nova tentativa sem travar a interface, status consistente, aviso de internet e ChatGPT obrigatórios, bloqueio de novo/carregar sem conta autorizada e acesso aos modelos, 63 testes automatizados e simulação visual de interface. Preservação dos saves e da v0.0.9. Autorização com conta real ainda deve ser testada no Windows."
+          }
