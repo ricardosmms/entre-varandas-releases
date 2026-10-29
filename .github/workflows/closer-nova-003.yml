@@ -4,7 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - '.github/workflows/closer-nova-002.yml'
+      - '.github/workflows/closer-nova-003.yml'
+      - 'release/build-003-trigger.txt'
 permissions:
   contents: write
 jobs:
