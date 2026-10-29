@@ -1,0 +1,54 @@
+name: CLOSER 0.0.9 - Correcao da ponte ChatGPT no Electron
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/closer-nova-009.yml'
+      - 'release/build-009-trigger.txt'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Baixar fonte
+        shell: pwsh
+        run: |
+          python -m pip install "gdown>=5,<6"
+          gdown --id 1WTY8UY6JIyH9YrPRbuE5GMS4K7RtdhuD -O source.zip
+          if ((Get-FileHash source.zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne "0de513d6e59ed9c9839ccfbd76c8a3dd1a5cc05b66f470c3f947c380108a53b3") { throw "SHA256 incorreto" }
+          Expand-Archive source.zip -DestinationPath source
+      - name: Instalar FFmpeg gratuito para edição dos efeitos
+        shell: pwsh
+        run: choco install ffmpeg --yes --no-progress
+      - name: Incorporar foley real de domínio público
+        shell: pwsh
+        working-directory: source/CLOSER_v0.0.9_SOURCE
+        run: ./tools/install_free_audio.ps1
+      - name: Instalar
+        working-directory: source/CLOSER_v0.0.9_SOURCE
+        run: npm install --no-audit --no-fund
+      - name: Testar
+        working-directory: source/CLOSER_v0.0.9_SOURCE
+        run: npm test
+      - name: Compilar
+        working-directory: source/CLOSER_v0.0.9_SOURCE
+        run: npm run package:win
+      - name: Publicar
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $installer = "source/CLOSER_v0.0.9_SOURCE/dist/CLOSER_Setup_v0.0.9.exe"
+          if (!(Test-Path $installer)) { throw "Instalador ausente" }
+          gh release view v0.0.9 *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload v0.0.9 $installer --clobber
+          } else {
+            gh release create v0.0.9 $installer --prerelease --title "CLOSER v0.0.9 - Correcao da ponte ChatGPT" --notes "Hotfix: corrigidos seis métodos da ponte Electron para login, desconexão, status, modelos e teste de geração. 58 testes automatizados, incluindo teste real de contrato da ponte. Mantidos os sistemas anteriores. A autenticação real do jogador precisa ser validada no Windows. Versão anterior preservada."
+          }
