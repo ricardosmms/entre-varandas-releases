@@ -1,6 +1,11 @@
-name: CLOSER v0.0.7
+name: CLOSER 0.0.7 - Correcao do dialogo da Bruna
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/closer-nova-007.yml'
+      - 'release/build-007-trigger.txt'
 permissions:
   contents: write
 jobs:
@@ -8,3 +13,42 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Baixar fonte
+        shell: pwsh
+        run: |
+          python -m pip install "gdown>=5,<6"
+          gdown --id 1OGG1n7elDMrV0voduwPFJfPq9lgyMWbz -O source.zip
+          if ((Get-FileHash source.zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne "d3a072786a0f17e0b8bcbe0e6eb300494d1eaa3904c19ad63c0ca428e9aeb096") { throw "SHA256 incorreto" }
+          Expand-Archive source.zip -DestinationPath source
+      - name: Instalar FFmpeg gratuito para edição dos efeitos
+        shell: pwsh
+        run: choco install ffmpeg --yes --no-progress
+      - name: Incorporar foley real de domínio público
+        shell: pwsh
+        working-directory: source/CLOSER_v0.0.7_SOURCE
+        run: ./tools/install_free_audio.ps1
+      - name: Instalar
+        working-directory: source/CLOSER_v0.0.7_SOURCE
+        run: npm install --no-audit --no-fund
+      - name: Testar
+        working-directory: source/CLOSER_v0.0.7_SOURCE
+        run: npm test
+      - name: Compilar
+        working-directory: source/CLOSER_v0.0.7_SOURCE
+        run: npm run package:win
+      - name: Publicar
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $installer = "source/CLOSER_v0.0.7_SOURCE/dist/CLOSER_Setup_v0.0.7.exe"
+          if (!(Test-Path $installer)) { throw "Instalador ausente" }
+          gh release view v0.0.7 *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload v0.0.7 $installer --clobber
+          } else {
+            gh release create v0.0.7 $installer --prerelease --title "CLOSER v0.0.7 - Correcao de conversa do primeiro encontro" --notes "Hotfix: diálogo de Bruna continua após oi e sim, perguntas curtas reconhecidas no contexto, conversas com progressão e despedida, salvamentos preservados, 42 testes aprovados. Demais recursos da v0.0.6 mantidos; respostas autorais offline sem IA generativa."
+          }
