@@ -1,0 +1,54 @@
+name: CLOSER 0.0.11 - Continuidade social, madrugada e expediente
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/closer-nova-011.yml'
+      - 'release/build-011-trigger.txt'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Baixar fonte
+        shell: pwsh
+        run: |
+          python -m pip install "gdown>=5,<6"
+          gdown --id 1ITRhqv9HyTzuULX_tGslwfKc7RSRAIKM -O source.zip
+          if ((Get-FileHash source.zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne "a73eeccde31bdbc2858aec29a6cfad1b09c13cc9415720570546f4daa57d4266") { throw "SHA256 incorreto" }
+          Expand-Archive source.zip -DestinationPath source
+      - name: Instalar FFmpeg gratuito para edição dos efeitos
+        shell: pwsh
+        run: choco install ffmpeg --yes --no-progress
+      - name: Incorporar foley real de domínio público
+        shell: pwsh
+        working-directory: source/CLOSER_v0.0.11_SOURCE
+        run: ./tools/install_free_audio.ps1
+      - name: Instalar
+        working-directory: source/CLOSER_v0.0.11_SOURCE
+        run: npm install --no-audit --no-fund
+      - name: Testar
+        working-directory: source/CLOSER_v0.0.11_SOURCE
+        run: npm test
+      - name: Compilar
+        working-directory: source/CLOSER_v0.0.11_SOURCE
+        run: npm run package:win
+      - name: Publicar
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $installer = "source/CLOSER_v0.0.11_SOURCE/dist/CLOSER_Setup_v0.0.11.exe"
+          if (!(Test-Path $installer)) { throw "Instalador ausente" }
+          gh release view v0.0.11 *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload v0.0.11 $installer --clobber
+          } else {
+            gh release create v0.0.11 $installer --prerelease --title "CLOSER v0.0.11 - Continuidade narrativa e iluminação" --notes "Atualização narrativa: Bruna respeita afastamentos e pode sair por iniciativa própria, conhecimento separado por personagem, diálogos mais curtos, convites plausíveis com entrada conjunta validada, mudança visual de iluminação após 23h no corredor/escritório, janelas iluminadas à noite e botão para encerrar expediente. 74 testes automatizados e simulação interativa do fluxo. OAuth da v0.0.10 preservado; as respostas reais do modelo ainda precisam ser testadas no Windows."
+          }
